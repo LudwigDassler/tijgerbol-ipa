@@ -19,19 +19,11 @@ jobs:
       - name: Create web files
         run: |
           mkdir -p www
-          cat > www/index.html << 'HTML'
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tijgerbol</title>
-</head>
-<body>
-    <script>window.location.href="https://ludwigdassler.github.io/tijgerbol_app/";</script>
-</body>
-</html>
-HTML
+          echo '<!DOCTYPE html>' > www/index.html
+          echo '<html>' >> www/index.html
+          echo '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Tijgerbol</title></head>' >> www/index.html
+          echo '<body><script>window.location.href="https://ludwigdassler.github.io/tijgerbol_app/";</script></body>' >> www/index.html
+          echo '</html>' >> www/index.html
 
       - name: Install Capacitor
         run: |
@@ -48,13 +40,11 @@ HTML
           cd ios/App
           sed -i '' 's/13.0/14.0/g' Podfile
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' App.xcodeproj/project.pbxproj
-          sed -i '' 's/PLATFORMOS_DEPLOYMENT_TARGET = .*/PLATFORMOS_DEPLOYMENT_TARGET = 14.0/g' App.xcodeproj/project.pbxproj
 
       - name: Sync and build
         run: |
           npx cap sync
           cd ios/App
-          pod deintegrate
           pod install --repo-update
           xcodebuild -project App.xcodeproj -scheme App -archivePath App.xcarchive archive
           mkdir -p export
