@@ -38,8 +38,9 @@ jobs:
       - name: Fix iOS versions
         run: |
           cd ios/App
-          sed -i '' 's/13.0/14.0/g' Podfile
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' App.xcodeproj/project.pbxproj
+          # Устанавливаем минимальную версию 15.0
+          sed -i '' 's/13.0/15.0/g' Podfile
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' App.xcodeproj/project.pbxproj
 
       - name: Sync and build
         run: |
