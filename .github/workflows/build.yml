@@ -16,11 +16,22 @@ jobs:
         with:
           node-version: '20'
           
-      - name: Create www folder
+      - name: Create web files
         run: |
           mkdir -p www
-          cp index.html www/
-          cp manifest.json www/ || true
+          cat > www/index.html << 'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tijgerbol</title>
+</head>
+<body>
+    <script>window.location.href="https://ludwigdassler.github.io/tijgerbol_app/";</script>
+</body>
+</html>
+HTML
           
       - name: Install Capacitor
         run: |
@@ -32,20 +43,11 @@ jobs:
           npx cap init Tijgerbol com.tijgerbol.app --web-dir=www
           npx cap add ios
           
-      - name: Update deployment target
+      - name: Fix iOS deployment target
         run: |
           cd ios/App
-          # Обновляем минимальную версию iOS в Podfile
-          cat > Podfile << 'PODFILE'
-          platform :ios, '13.0'
-          use_frameworks!
-          target 'App' do
-            capacitor_pods = true
-            pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
-          end
-PODFILE
-          # Обновляем версию в Xcode проекте
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/13.0/13.0/g' Podfile
           
       - name: Sync and build
         run: |
