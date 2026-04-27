@@ -16,34 +16,30 @@ jobs:
         with:
           node-version: '20'
           
-      - name: Install PWABuilder
-        run: npm install -g @pwabuilder/cli
-        
-      - name: Generate iOS project
-        run: pwa create . --platform ios
-        
-      - name: Create exportOptions.plist
+      - name: Install Capacitor
         run: |
-          mkdir -p platforms/ios
-          echo '<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>provisioningProfiles</key>
-              <dict/>
-          </dict>
-          </plist>' > platforms/ios/exportOptions.plist
-        
-      - name: Archive and export IPA
+          npm install -g @capacitor/cli
+          npm install @capacitor/core @capacitor/ios
+          
+      - name: Create Capacitor project
         run: |
-          cd platforms/ios
-          xcodebuild -project Tijgerbol.xcodeproj -scheme Tijgerbol -archivePath Tijgerbol.xcarchive archive
-          xcodebuild -exportArchive -archivePath Tijgerbol.xcarchive -exportPath . -exportOptionsPlist exportOptions.plist
+          npx cap init Tijgerbol com.tijgerbol.app --web-dir=.
+          npx cap add ios
+          
+      - name: Sync and build
+        run: |
+          npx cap sync
+          cd ios/App
+          pod install
+          
+      - name: Archive IPA
+        run: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj -scheme App -archivePath App.xcarchive archive
+          xcodebuild -exportArchive -archivePath App.xcarchive -exportPath . -exportOptionsPlist exportOptions.plist
           
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: Tijgerbol.ipa
-          path: platforms/ios/*.ipa
+          path: ios/App/*.ipa
