@@ -10,14 +10,18 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          
       - name: Install PWABuilder
         run: npm install -g @pwabuilder/cli
+        
       - name: Generate iOS project
         run: pwa create . --platform ios
+        
       - name: Create exportOptions.plist
         run: |
           mkdir -p platforms/ios
@@ -33,11 +37,13 @@ jobs:
 </dict>
 </plist>
 PLIST
+        
       - name: Archive and export IPA
         run: |
           cd platforms/ios
           xcodebuild -project Tijgerbol.xcodeproj -scheme Tijgerbol -archivePath Tijgerbol.xcarchive archive
           xcodebuild -exportArchive -archivePath Tijgerbol.xcarchive -exportPath . -exportOptionsPlist exportOptions.plist
+          
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
