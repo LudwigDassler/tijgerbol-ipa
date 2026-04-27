@@ -32,17 +32,26 @@ jobs:
           npx cap init Tijgerbol com.tijgerbol.app --web-dir=www
           npx cap add ios
           
-      - name: Update iOS deployment target
+      - name: Update deployment target
         run: |
           cd ios/App
+          # Обновляем минимальную версию iOS в Podfile
+          cat > Podfile << 'PODFILE'
+          platform :ios, '13.0'
+          use_frameworks!
+          target 'App' do
+            capacitor_pods = true
+            pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+          end
+PODFILE
+          # Обновляем версию в Xcode проекте
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' App.xcodeproj/project.pbxproj
-          sed -i '' 's/PLATFORMOS_DEPLOYMENT_TARGET = .*/PLATFORMOS_DEPLOYMENT_TARGET = 13.0/g' App.xcodeproj/project.pbxproj
           
       - name: Sync and build
         run: |
           npx cap sync
           cd ios/App
-          pod install
+          pod install --repo-update
           xcodebuild -project App.xcodeproj -scheme App -archivePath App.xcarchive archive
           xcodebuild -exportArchive -archivePath App.xcarchive -exportPath . -exportOptionsPlist exportOptions.plist
           
