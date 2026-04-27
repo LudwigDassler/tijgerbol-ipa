@@ -1,0 +1,45 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install PWABuilder
+        run: npm install -g @pwabuilder/cli
+      - name: Generate iOS project
+        run: pwa create . --platform ios
+      - name: Create exportOptions.plist
+        run: |
+          mkdir -p platforms/ios
+          cat > platforms/ios/exportOptions.plist << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>development</string>
+    <key>provisioningProfiles</key>
+    <dict/>
+</dict>
+</plist>
+PLIST
+      - name: Archive and export IPA
+        run: |
+          cd platforms/ios
+          xcodebuild -project Tijgerbol.xcodeproj -scheme Tijgerbol -archivePath Tijgerbol.xcarchive archive
+          xcodebuild -exportArchive -archivePath Tijgerbol.xcarchive -exportPath . -exportOptionsPlist exportOptions.plist
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tijgerbol.ipa
+          path: platforms/ios/*.ipa
