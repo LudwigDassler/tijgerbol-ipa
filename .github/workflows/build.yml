@@ -16,6 +16,12 @@ jobs:
         with:
           node-version: '20'
           
+      - name: Create www folder
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp manifest.json www/ || true
+          
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
@@ -23,7 +29,7 @@ jobs:
           
       - name: Create Capacitor project
         run: |
-          npx cap init Tijgerbol com.tijgerbol.app --web-dir=.
+          npx cap init Tijgerbol com.tijgerbol.app --web-dir=www
           npx cap add ios
           
       - name: Sync and build
@@ -31,10 +37,6 @@ jobs:
           npx cap sync
           cd ios/App
           pod install
-          
-      - name: Archive IPA
-        run: |
-          cd ios/App
           xcodebuild -project App.xcodeproj -scheme App -archivePath App.xcarchive archive
           xcodebuild -exportArchive -archivePath App.xcarchive -exportPath . -exportOptionsPlist exportOptions.plist
           
