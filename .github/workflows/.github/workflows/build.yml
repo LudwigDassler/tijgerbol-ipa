@@ -1,0 +1,47 @@
+name: Build iOS IPA
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Create web files
+        run: |
+          mkdir -p www
+          echo '<!DOCTYPE html>' > www/index.html
+          echo '<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Tijgerbol</title></head>' >> www/index.html
+          echo '<body><script>window.location.href="https://ludwigdassler.github.io/tijgerbol_app/";</script></body></html>' >> www/index.html
+      - name: Install Capacitor
+        run: |
+          sudo npm install -g @capacitor/cli
+          npm install @capacitor/core @capacitor/ios
+      - name: Create Capacitor project
+        run: |
+          npx cap init Tijgerbol com.tijgerbol.app --web-dir=www
+          npx cap add ios
+      - name: Fix iOS versions
+        run: |
+          cd ios/App
+          sed -i '' 's/13.0/14.0/g' Podfile
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' App.xcodeproj/project.pbxproj
+      - name: Sync and build
+        run: |
+          npx cap sync
+          cd ios/App
+          sudo gem install cocoapods
+          pod install --repo-update
+          xcodebuild -project App.xcodeproj -scheme App -archivePath App.xcarchive archive
+          mkdir -p export
+          xcodebuild -exportArchive -archivePath App.xcarchive -exportPath export -exportOptionsPlist exportOptions.plist
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tijgerbol.ipa
+          path: ios/App/export/*.ipa
